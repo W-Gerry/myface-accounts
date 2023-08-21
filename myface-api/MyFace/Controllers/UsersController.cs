@@ -1,6 +1,4 @@
-﻿using Microsoft.AspNetCore.Connections;
-using Microsoft.AspNetCore.Mvc;
-using MyFace.Models.Database;
+﻿using Microsoft.AspNetCore.Mvc;
 using MyFace.Models.Request;
 using MyFace.Models.Response;
 using MyFace.Repositories;
