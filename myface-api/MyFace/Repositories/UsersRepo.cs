@@ -2,6 +2,8 @@
 using System.Linq;
 using MyFace.Models.Database;
 using MyFace.Models.Request;
+using MyFace.Helpers;
+using System.Security.Cryptography.X509Certificates;
 
 namespace MyFace.Repositories
 {
@@ -59,6 +61,8 @@ namespace MyFace.Repositories
 
         public User Create(CreateUserRequest newUser)
         {
+            var passwordHelper = new PasswordHelper();
+            var salt = passwordHelper.GenerateSalt();
             var insertResponse = _context.Users.Add(new User
             {
                 FirstName = newUser.FirstName,
@@ -67,6 +71,8 @@ namespace MyFace.Repositories
                 Username = newUser.Username,
                 ProfileImageUrl = newUser.ProfileImageUrl,
                 CoverImageUrl = newUser.CoverImageUrl,
+                Salt = salt,
+                HashedPassword = passwordHelper.GenerateHash(newUser.Password, salt),
             });
             _context.SaveChanges();
 
