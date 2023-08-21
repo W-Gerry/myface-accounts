@@ -15,6 +15,7 @@ namespace MyFace.Repositories
         User Create(CreateUserRequest newUser);
         User Update(int id, UpdateUserRequest update);
         void Delete(int id);
+        User GetByUsername(string username);
     }
     
     public class UsersRepo : IUsersRepo
@@ -59,10 +60,15 @@ namespace MyFace.Repositories
                 .Single(user => user.Id == id);
         }
 
+        public User GetByUsername(string username)
+        {
+            return _context.Users
+                .SingleOrDefault(user => user.Username == username);
+        }
+
         public User Create(CreateUserRequest newUser)
         {
-            var passwordHelper = new PasswordHelper();
-            var salt = passwordHelper.GenerateSalt();
+            var salt = PasswordHelper.GenerateSalt();
             var insertResponse = _context.Users.Add(new User
             {
                 FirstName = newUser.FirstName,
@@ -72,7 +78,7 @@ namespace MyFace.Repositories
                 ProfileImageUrl = newUser.ProfileImageUrl,
                 CoverImageUrl = newUser.CoverImageUrl,
                 Salt = salt,
-                HashedPassword = passwordHelper.GenerateHash(newUser.Password, salt),
+                HashedPassword = PasswordHelper.GenerateHash(newUser.Password, salt),
             });
             _context.SaveChanges();
 

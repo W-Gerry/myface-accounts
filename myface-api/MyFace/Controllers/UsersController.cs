@@ -23,38 +23,24 @@ namespace MyFace.Controllers
         [HttpGet("")]
         public ActionResult<UserListResponse> Search([FromQuery] UserSearchRequest searchRequest)
         {
-            string username = "";
-            string password = "";
-
-            if(Request.Headers.TryGetValue("Authorization", out var authorization))
+            if(Request.Headers.TryGetValue("Authorization", out var authorization) && authorization.ToString().StartsWith("Basic "))
             {
-                if (authorization.ToString().StartsWith("Basic "))
+                var encodedUsernameAndPassword = authorization.ToString().Substring(6);
+                var newUsernameAndPasswordBytes = Convert.FromBase64String(encodedUsernameAndPassword);
+                var decodedUsernameAndPassword = System.Text.Encoding.UTF8.GetString(newUsernameAndPasswordBytes);
+                string[] separatedUsernameAndPassword = decodedUsernameAndPassword.Split(':');
+                var username = separatedUsernameAndPassword[0];
+                var password = separatedUsernameAndPassword[1];
+                var matchingUser = _users.GetByUsername(username);
+
+                if (matchingUser == null || PasswordHelper.GenerateHash(password, matchingUser.Salt) != matchingUser.HashedPassword)
                 {
-                    var encodedUsernameAndPassword = authorization.ToString().Substring(6);
-                    byte[] newUsernameAndPasswordBytes = Convert.FromBase64String(encodedUsernameAndPassword);
-                    var decodedUsernameAndPassword = BitConverter.ToString(newUsernameAndPasswordBytes);
-                    string[] separatedUsernameAndPassword = decodedUsernameAndPassword.Split(':');
-                    username = separatedUsernameAndPassword[0];
-                    password = separatedUsernameAndPassword[1];
+                    return Unauthorized();
                 }
             } else{
                 return Unauthorized();
             }            
-
             var users = _users.Search(searchRequest);
-            foreach(User user in users )
-            {
-                if (user.Username == username)
-                {
-                    PasswordHelper passwordHelper = new();
-                    var hashSubmittedPassword = passwordHelper.GenerateHash(password, user.Salt);
-                    if (hashSubmittedPassword != user.HashedPassword)
-                    {
-                        return Unauthorized();
-                    }
-                }
-            }
-
             var userCount = _users.Count(searchRequest);
             return UserListResponse.Create(searchRequest, users, userCount);
         }

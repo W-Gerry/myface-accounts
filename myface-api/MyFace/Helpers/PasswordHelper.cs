@@ -5,10 +5,10 @@ using MyFace.Models.Request;
 namespace MyFace.Helpers
 
 {
-    public class PasswordHelper
+    public static class PasswordHelper
     {
 
-        public byte[] GenerateSalt()
+        public static byte[] GenerateSalt()
         {
              // generate a 128-bit salt using a cryptographically strong random sequence of nonzero values
             byte[] salt = new byte[128 / 8];
@@ -19,12 +19,12 @@ namespace MyFace.Helpers
             return salt;
         }
        
-        public string GenerateHash(string password, byte[] salt)
+        public static string GenerateHash(string password, byte[] salt)
         {
             var user = new CreateUserRequest();
               // derive a 256-bit subkey (use HMACSHA256 with 100,000 iterations)
             string hashedPassword = Convert.ToBase64String(KeyDerivation.Pbkdf2(
-                password: user.Password,
+                password: password,
                 salt: salt,
                 prf: KeyDerivationPrf.HMACSHA256,
                 iterationCount: 100000,
