@@ -21,26 +21,15 @@ namespace MyFace.Controllers
         [HttpGet("")]
         public ActionResult<UserListResponse> Search([FromQuery] UserSearchRequest searchRequest)
         {
-            if(Request.Headers.TryGetValue("Authorization", out var authorization) && authorization.ToString().StartsWith("Basic "))
+            if (AuthHelper.IsAuthenticated(Request, _users))
             {
-                var encodedUsernameAndPassword = authorization.ToString().Substring(6);
-                var newUsernameAndPasswordBytes = Convert.FromBase64String(encodedUsernameAndPassword);
-                var decodedUsernameAndPassword = System.Text.Encoding.UTF8.GetString(newUsernameAndPasswordBytes);
-                string[] separatedUsernameAndPassword = decodedUsernameAndPassword.Split(':');
-                var username = separatedUsernameAndPassword[0];
-                var password = separatedUsernameAndPassword[1];
-                var matchingUser = _users.GetByUsername(username);
-
-                if (matchingUser == null || PasswordHelper.GenerateHash(password, matchingUser.Salt) != matchingUser.HashedPassword)
-                {
-                    return Unauthorized();
-                }
-            } else{
+                var users = _users.Search(searchRequest);
+                var userCount = _users.Count(searchRequest);
+                return UserListResponse.Create(searchRequest, users, userCount);
+            } else
+            {
                 return Unauthorized();
-            }            
-            var users = _users.Search(searchRequest);
-            var userCount = _users.Count(searchRequest);
-            return UserListResponse.Create(searchRequest, users, userCount);
+            }
         }
 
         [HttpGet("{id}")]
