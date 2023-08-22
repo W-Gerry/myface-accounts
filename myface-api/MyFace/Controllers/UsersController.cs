@@ -47,23 +47,14 @@ namespace MyFace.Controllers
 
         [HttpPost("create")]
         public IActionResult Create([FromBody] CreateUserRequest newUser)
-        {
-            if (AuthHelper.IsAuthenticated(Request, _users))
-            {
-                if (!ModelState.IsValid)
-                {
-                    return BadRequest(ModelState);
-                }
+        {   
                 
                 var user = _users.Create(newUser);
 
                 var url = Url.Action("GetById", new { id = user.Id });
                 var responseViewModel = new UserResponse(user);
                 return Created(url, responseViewModel);              
-            } else
-            {
-                return Unauthorized();
-            }
+
         }
 
         [HttpPatch("{id}/update")]

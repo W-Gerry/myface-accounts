@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Http;
 using MyFace.Repositories;
 using MyFace.Models;
 using MyFace.Models.Request;
+using System.Reflection.Metadata;
 
 namespace MyFace.Helpers
 {
@@ -18,20 +19,23 @@ namespace MyFace.Helpers
                 string[] separatedUsernameAndPassword = decodedUsernameAndPassword.Split(':');
                 var username = separatedUsernameAndPassword[0];
                 var password = separatedUsernameAndPassword[1];
-                var matchingUser = users.GetByUsername(username);
-
-                if (matchingUser == null || PasswordHelper.GenerateHash(password, matchingUser.Salt) != matchingUser.HashedPassword)
-                {
-                    return false;
-                }
+                return VerifyCredentials(username, password, users);
             } else
             {
                 return false;
-            }
+            }       
+        }
 
-            return true;        
+        public static bool VerifyCredentials(string username, string password, IUsersRepo usersRepo)
+        {
+            var matchingUser = usersRepo.GetByUsername(username);
+
+            if (matchingUser == null || PasswordHelper.GenerateHash(password, matchingUser.Salt) != matchingUser.HashedPassword)
+            {
+                return false;
+            }
+            return true;
         }
         
     }
 }
-
