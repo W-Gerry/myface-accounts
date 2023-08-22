@@ -35,42 +35,67 @@ namespace MyFace.Controllers
         [HttpGet("{id}")]
         public ActionResult<UserResponse> GetById([FromRoute] int id)
         {
-            var user = _users.GetById(id);
-            return new UserResponse(user);
+            if (AuthHelper.IsAuthenticated(Request, _users))
+            {
+                var user = _users.GetById(id);
+                return new UserResponse(user);               
+            } else
+            {
+                return Unauthorized();
+            }
         }
 
         [HttpPost("create")]
         public IActionResult Create([FromBody] CreateUserRequest newUser)
         {
-            if (!ModelState.IsValid)
+            if (AuthHelper.IsAuthenticated(Request, _users))
             {
-                return BadRequest(ModelState);
-            }
-            
-            var user = _users.Create(newUser);
+                if (!ModelState.IsValid)
+                {
+                    return BadRequest(ModelState);
+                }
+                
+                var user = _users.Create(newUser);
 
-            var url = Url.Action("GetById", new { id = user.Id });
-            var responseViewModel = new UserResponse(user);
-            return Created(url, responseViewModel);
+                var url = Url.Action("GetById", new { id = user.Id });
+                var responseViewModel = new UserResponse(user);
+                return Created(url, responseViewModel);              
+            } else
+            {
+                return Unauthorized();
+            }
         }
 
         [HttpPatch("{id}/update")]
         public ActionResult<UserResponse> Update([FromRoute] int id, [FromBody] UpdateUserRequest update)
         {
-            if (!ModelState.IsValid)
+            if (AuthHelper.IsAuthenticated(Request, _users))
             {
-                return BadRequest(ModelState);
-            }
+                if (!ModelState.IsValid)
+                {
+                    return BadRequest(ModelState);
+                }
 
-            var user = _users.Update(id, update);
-            return new UserResponse(user);
+                var user = _users.Update(id, update);
+                return new UserResponse(user);        
+            } else
+            {
+                return Unauthorized();
+            }
+            
         }
         
         [HttpDelete("{id}")]
         public IActionResult Delete([FromRoute] int id)
         {
-            _users.Delete(id);
-            return Ok();
+            if (AuthHelper.IsAuthenticated(Request, _users))
+            {
+                _users.Delete(id);
+                return Ok();            
+            } else
+            {
+                return Unauthorized();
+            }
         }
     }
 }
